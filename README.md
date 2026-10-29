@@ -1,6 +1,6 @@
 # Supercell ID UI
 
-my try at recreating the supercell id signup + profile ui. i wanted it to look as close to the original as possible (layout, colors, icons, animations, sounds). its just one html file, no framework or anything
+my try at recreating the supercell id signup + profile ui. i wanted it to look as close to the original as possible (layout, colors, icons, animations, sounds).
 
 theres no backend so the email and code only get checked for format, nothing gets sent
 
@@ -8,7 +8,7 @@ theres no backend so the email and code only get checked for format, nothing get
 
 - `supercell-id.html` - the whole thing
 - `build_assets.py` - script that gets the images and sounds ready
-- `assets/` - not in the repo, you make it yourself
+- `assets/` - The original scid assets
 
 ## setup
 
@@ -33,5 +33,6 @@ and go to `localhost:8000/supercell-id.html`
 - missing images are just left out, page still works
 - sounds can be turned off with `SOUND=false` in the script
 - english and spanish
+- Not full scid you have to add some things by yourself
 
 not affiliated with supercell, everything belongs to them. dont upload their assets to your fork
