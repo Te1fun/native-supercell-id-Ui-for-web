@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Supercell ID (Nachbau-Demo)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
+<style>
+:root{--bg:#fff;--fg:#111;--mut:#666;--box:#eee;--circ:#ededed;--blue:#2f86f6;--blue2:#4a9bff;--green:#37d6a0;--line:#e5e5e5;--pad:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#fff;--fg:#111}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Roboto,Helvetica,Arial,sans-serif;background:#222;color:var(--fg);display:flex;align-items:center;justify-content:center}
+#app{display:flex;width:100%;height:100%;max-width:1100px;max-height:560px;background:var(--bg);overflow:hidden;position:relative;border-radius:6px}
+@media (max-width:700px){#app{max-height:none;border-radius:0}}
+
+#left{width:22.5%;min-width:150px;position:relative;color:#fff;background:linear-gradient(160deg,#233d9a 0%,#1c5ac4 45%,#3aa8e8 100%);overflow:hidden;flex:none}
+#left::before{content:"";position:absolute;inset:-20% -40%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.18),transparent 40%),radial-gradient(circle at 70% 80%,rgba(0,0,0,.25),transparent 45%)}
+#close{position:absolute;top:calc(14px + var(--pad));left:16px;z-index:3;background:none;border:0;color:#fff;font-size:30px;line-height:1;cursor:pointer;padding:0;font-weight:300}
+#logo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;z-index:2;gap:10px;font-size:13px;line-height:1.35}
+.sc{display:flex;align-items:center;gap:6px;font-weight:900;font-size:20px;letter-spacing:.5px}
+.idb{background:#fff;color:#111;border-radius:6px;padding:1px 6px;font-weight:900;font-size:17px}
+#fly{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.fi{position:absolute;left:0;top:0;border-radius:22%;opacity:0;will-change:transform,opacity;backface-visibility:hidden}
+#steps{position:absolute;inset:0;z-index:2;display:none}
+.track{position:absolute;left:18%;top:7%;bottom:7%;width:12px;border-radius:6px;background:rgba(255,255,255,.4)}
+.dot{position:absolute;left:50%;width:12px;height:12px;border-radius:50%;background:#fff;transform:translateX(-50%);transition:top .4s}
+.lbl{position:absolute;left:calc(18% + 26px);font-size:13px;font-weight:500;color:rgba(255,255,255,.55);transition:color .3s}
+.lbl.on{color:#fff}
+
+#right{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:20px}
+.view{display:none;width:100%;align-items:center;justify-content:center;gap:clamp(24px,7vw,90px);animation:in .35s}
+.view.on{display:flex}
+@keyframes in{from{opacity:0;transform:translateX(14px)}to{opacity:1}}
+.circle{width:min(36vw,160px);aspect-ratio:1;border-radius:50%;background:var(--circ);position:relative;display:flex;align-items:center;justify-content:center;flex:none}
+.col{width:min(58vw,330px);text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+h1{font-size:17px;font-weight:700;margin:0 0 4px}
+p{margin:0;color:var(--mut);font-size:15px;line-height:1.5}
+p b,.green{color:var(--green);font-weight:500}
+.btn{border:0;cursor:pointer;font:900 15px Roboto,sans-serif;text-transform:uppercase;border-radius:6px;padding:14px 0;background:linear-gradient(var(--blue2),var(--blue));color:#fff;box-shadow:0 3px 0 #1b5fc2;min-width:130px;letter-spacing:.3px}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #1b5fc2}
+.btn.w{background:#fff;color:#111;border:1px solid #ccc;box-shadow:none}
+.btn.big{width:100%}
+.row{display:flex;gap:10px;width:100%;justify-content:center}
+.row .btn{flex:1}
+.link{color:var(--fg);font-size:13px;font-weight:500}
+.link a{color:var(--blue);text-decoration:none;cursor:pointer}
+.faq{position:absolute;top:calc(12px + var(--pad));right:18px;font-size:12px;font-weight:700}
+.top{position:absolute;top:calc(14px + var(--pad));left:0;right:0;text-align:center;font-weight:900;letter-spacing:2px;font-size:11px;line-height:.95;text-align:left;padding-left:16px}
+input.em{width:100%;padding:14px;font:500 16px Roboto,sans-serif;border:2px solid var(--line);border-radius:6px;background:#f7f7f7;outline:0;text-align:center}
+input.em:focus{border-color:var(--blue)}
+
+#v2{gap:clamp(24px,4vw,40px)}
+#v2 .circle{width:min(36vw,170px)}
+#v2 .col{width:min(58vw,390px);align-items:stretch;gap:14px}
+#v2 h1{font-size:18px;margin:0 0 6px;text-align:center}
+#v2 .col>p{font-size:15px;max-width:270px;margin:0 auto 6px;color:#444;text-align:center}
+#v2 input.em{height:54px;padding:0 16px;text-align:left;font-size:16px;border:1px solid #e4e4e4;background:#f2f2f2;border-radius:5px}
+#v2 input.em::placeholder{color:#a9a9a9}
+#v2 input.em:focus{border-color:var(--blue);background:#fff}
+#v2 .err:empty{display:none}
+.rem{position:relative;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:500;color:#333}
+#chk{width:36px;height:36px;border-radius:5px;border:1px solid #e0e0e0;background:#efefef;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+#chk svg{display:none}
+#chk[aria-checked=true] svg{display:block}
+#infoB{margin-left:auto;width:36px;height:36px;border-radius:50%;border:0;background:#e4e4e4;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font:700 16px Roboto,sans-serif;color:#444;overflow:hidden;flex:none}
+#infoB img{width:100%;height:100%;display:block}
+.tip{position:absolute;right:0;bottom:46px;width:220px;background:#333;color:#fff;font-size:12px;font-weight:400;line-height:1.4;padding:8px 10px;border-radius:6px;z-index:5}
+#v2 .row .btn{height:54px;padding:0;font-size:15px}
+#v2 .btn:disabled{color:rgba(255,255,255,.55);cursor:default}
+#v2 .btn:disabled:active{transform:none;box-shadow:0 3px 0 #1b5fc2}
+.codes{display:flex;gap:7px;justify-content:center}
+.codes input{width:clamp(30px,5.2vw,50px);height:50px;text-align:center;font:500 24px Roboto,sans-serif;border:0;border-radius:5px;background:var(--box);outline:0;color:#333}
+.codes input:focus{box-shadow:0 0 0 2px var(--blue)}
+.err{color:#d33;font-size:13px;min-height:16px}
+.badge{position:absolute;top:8%;right:6%;width:38px;height:38px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center}
+.phone{width:44%;height:62%;border-radius:10px;background:#fff;border:3px solid #fff;box-shadow:0 2px 6px #0002;position:relative;display:flex;align-items:center;justify-content:center}
+.phone i{position:absolute;inset:6px 4px;background:#2a2a2e;border-radius:6px;z-index:0}
+.phone span{position:relative;z-index:1;background:#fff;color:#111;font-weight:900;font-size:17px;border-radius:5px;padding:4px 7px}
+.note{position:absolute;bottom:8px;left:12px;font-size:10px;color:#aaa}
+@media (max-width:700px){.view{flex-direction:column;gap:14px}.circle{width:110px}#left{width:26%}}
+
+#profile{position:absolute;inset:0;display:none;background:#f0f0f0;z-index:20;overflow:hidden}
+#profile.on{display:block;animation:in .35s}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0;background:#f0f0f0;font-family:Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+#side{position:absolute;left:0;top:0;bottom:0;width:214px;background:#fff;z-index:2;box-shadow:0 0 14px #0002}
+.round{position:absolute;top:28px;width:42px;height:42px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;border:0;cursor:pointer;padding:0;color:#777}
+.round .ico{display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1}
+.round .ico img{display:block}
+.pill{position:absolute;top:-7px;right:-9px;min-width:22px;height:22px;border-radius:11px;background:#f26aa8;color:#fff;font:700 11px Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:0 5px}
+#me{position:absolute;left:52px;top:55px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 50% 45%,#d9f1fc,#9fd8f5 70%,#7cc6ee);display:flex;align-items:center;justify-content:center;font-size:56px;overflow:hidden}
+#me img{width:100%;height:100%;object-fit:cover;display:block}
+.on-t{position:absolute;left:135px;top:150px;z-index:3;display:flex;align-items:center;gap:4px;font:500 13px Roboto,Helvetica,Arial,sans-serif;color:#5fdcb4;white-space:nowrap}
+.on-t::before{content:"";width:18px;height:18px;border-radius:50%;background:#5fdcb4;flex:none}
+#idrow{position:absolute;left:33px;top:192px;right:20px;height:28px;display:flex;align-items:center;gap:8px}
+#idlogo{height:28px;display:flex;align-items:center;flex:none}
+#idlogo img{height:28px;width:auto;display:block}
+#idlogo .idb{background:#111;color:#fff;font:900 15px Roboto,Helvetica,Arial,sans-serif;border-radius:7px;width:31px;height:28px;display:flex;align-items:center;justify-content:center;padding:0}
+#pname{font:500 14px Roboto,Helvetica,Arial,sans-serif;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}
+.tab{position:absolute;left:0;width:214px;height:65px;display:flex;align-items:center;gap:11px;padding-left:30px;font:700 13px Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2px;color:#aaa;background:#f3f3f3;cursor:pointer;text-transform:uppercase}
+.tab.on{background:#fff;color:#111;box-shadow:0 0 10px #00000024;z-index:3}
+.tab .ic{width:55px;height:44px;display:flex;align-items:center;justify-content:center;flex:none}
+.tab .ic img{max-width:55px;max-height:44px;display:block}
+#flist{position:absolute;left:228px;top:17px;right:42px;bottom:0;z-index:1;background:#fff;border-radius:14px 14px 0 0;overflow:auto;scrollbar-width:none;box-shadow:0 1px 3px #0001}
+#flist::-webkit-scrollbar{display:none}
+.blur{filter:none}
+#gpill{position:absolute;left:50%;top:222px;transform:translateX(-50%);height:22px;padding:0 9px 0 4px;border-radius:11px;background:#f3f3f3;display:flex;align-items:center;gap:5px;font:400 11px Roboto,Helvetica,Arial,sans-serif;color:#888;white-space:nowrap;max-width:170px}
+#gpill .gi{width:16px;height:16px;border-radius:4px;background:#ccc;flex:none;display:flex;overflow:hidden}
+#gpill .gi img{width:100%;height:100%;display:block;object-fit:cover}
+#gname{overflow:hidden;text-overflow:ellipsis;max-width:110px}
+#bBack{display:none}
+#side.set #bChat{display:none}
+#side.set #bBack{display:flex}
+#sett{position:absolute;left:214px;top:0;right:0;bottom:0;z-index:1;background:#f0f0f0;display:none;overflow:hidden}
+
+#shead{height:34px;background:none;display:flex;align-items:center;justify-content:center;font:700 12px Roboto,Helvetica,Arial,sans-serif;letter-spacing:.4px;color:#111;text-transform:uppercase;position:relative;z-index:2}
+#sbody{position:absolute;left:17px;right:42px;top:40px;bottom:0;overflow:auto;scrollbar-width:none;padding-bottom:34px}
+#sbody::-webkit-scrollbar{display:none}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px #0001;margin-bottom:16px;overflow:hidden}
+.srow{height:70px;display:flex;align-items:center;padding:0 16px 0 18px;font:500 16px Roboto,Helvetica,Arial,sans-serif;color:#222}
+.srow+.srow{border-top:1px solid #ececec}
+.srow .grow{flex:1;min-width:0}
+.tgl{width:64px;height:34px;border-radius:17px;background:#cfcfcf;position:relative;cursor:pointer;border:0;padding:0;flex:none;transition:background .2s}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:left .2s}
+.tgl.on{background:#37d6a0}
+.tgl.on::after{left:33px}
+.pid{gap:14px}
+#sidlogo{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex:none}
+#sidlogo img{height:36px;width:auto;display:block}
+#sidlogo .idb{background:#111;color:#fff;font:900 17px Roboto,Helvetica,Arial,sans-serif;border-radius:8px;width:36px;height:34px;display:flex;align-items:center;justify-content:center;padding:0}
+.pid .lab{font:400 12px Roboto,Helvetica,Arial,sans-serif;color:#888;line-height:14px}
+.pid .val{font:500 16px Roboto,Helvetica,Arial,sans-serif;color:#222;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chg{border:0;background:none;padding:0;cursor:pointer;font:500 14px Roboto,Helvetica,Arial,sans-serif;color:#2f86f6;text-transform:uppercase;flex:none}
+.srow.mail{height:64px;font:400 14px Roboto,Helvetica,Arial,sans-serif;color:#888;gap:12px}
+.srow.mail .grow{display:flex;flex-direction:column;gap:5px;justify-content:center}
+#smail{height:20px;border-radius:5px;background:#ececec;color:#555;font:400 12px Roboto,Helvetica,Arial,sans-serif;padding:2px 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:290px}
+.fr{display:flex;align-items:center;gap:13px;height:68px;padding:0 0 0 11px;border-bottom:1px solid #e9e9e9;cursor:pointer}
+.fr .fav{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden}
+.fr .fav img{width:100%;height:100%;object-fit:cover;display:block}
+.fr .n{font:500 14px Roboto,Helvetica,Arial,sans-serif;color:#777;line-height:17px;margin-bottom:3px}
+.fr .s{font:400 13px Roboto,Helvetica,Arial,sans-serif;color:#7a7a7a;line-height:16px}
+.fr .ch{margin-left:auto;margin-right:31px;display:flex}
+#fab{position:absolute;right:50px;bottom:23px;z-index:5;width:60px;height:60px;border-radius:50%;background:#fff;box-shadow:0 2px 10px #0003;display:flex;align-items:center;justify-content:center}
+#fab .ico{display:flex}
+#fab .ico img{width:36px;height:auto;display:block}
+#fab .pill{top:-4px;right:-9px;min-width:24px}
+
+.srow.lnk{cursor:pointer}
+.srow.lnk:active{background:#f6f6f6}
+.ico2{width:36px;height:36px;margin-right:14px;flex:none;display:flex;align-items:center;justify-content:center;position:relative}
+.ico2 img{width:36px;height:36px;display:block}
+.ico2 .fb{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font:900 13px Roboto,Helvetica,Arial,sans-serif}
+.ico2 .fb.sw{background:#2f7be5}.ico2 .fb.lo{background:#111}
+.ico2 .bang{position:absolute;top:-5px;right:-6px;width:17px;height:17px;border-radius:50%;background:#f26aa8;color:#fff;font:700 11px/17px Roboto,Helvetica,Arial,sans-serif;text-align:center;font-style:normal}
+.chev{display:flex;flex:none;margin-right:6px}
+.ext{display:flex;flex:none;margin-right:4px;width:22px;height:22px;align-items:center;justify-content:center}
+.ext img{width:22px;height:auto;display:block}
+.srow.apr{height:56px}
+.srow.apd{height:70px;font:400 13px Roboto,Helvetica,Arial,sans-serif;color:#888;gap:16px;border-top:0}
+.srow.apd .grow{line-height:1.35}
+.hdr{height:52px;display:flex;align-items:center;padding:0 18px;font:400 13px Roboto,Helvetica,Arial,sans-serif;color:#666;text-transform:uppercase;border-bottom:1px solid #ececec}
+.ver{font:400 12px Roboto,Helvetica,Arial,sans-serif;color:#aaa;margin:-4px 0 4px 2px}
+
+#me{cursor:pointer}
+#edit{position:absolute;inset:0;background:#fbfbfb;z-index:30;display:none}
+#edit.on{display:block}
+#eTitle{position:absolute;top:21px;left:36%;right:7%;text-align:center;font:700 12px Roboto,Helvetica,Arial,sans-serif;letter-spacing:.4px;text-transform:uppercase;color:#111}
+#ePrev{position:absolute;left:11%;top:50%;width:150px;height:150px;margin-top:-75px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:70px;background:#e6e6e6}
+#ePrev img,.av img{width:100%;height:100%;object-fit:cover;display:block}
+#eCol{position:absolute;left:36%;right:0;top:64px}
+.elab{font:400 13px Roboto,Helvetica,Arial,sans-serif;color:#777;margin-bottom:12px}
+.erow{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;padding:5px 7% 5px 5px;margin:-5px 0 14px -5px}
+.erow::-webkit-scrollbar{display:none}
+.erow button{width:56px;height:56px;border-radius:50%;border:0;padding:0;flex:none;cursor:pointer;overflow:hidden;background:#e6e6e6;font-size:28px;display:flex;align-items:center;justify-content:center}
+.erow button.sel{box-shadow:0 0 0 3px #fbfbfb,0 0 0 5px #2f86f6}
+.ebtns{display:flex;gap:14px;margin-right:7%;margin-top:22px}
+.ebtns .btn{flex:1;height:56px;padding:0;font-size:14px}
+
+#glist{position:absolute;left:228px;top:17px;right:42px;bottom:0;z-index:1;display:none;overflow:auto;scrollbar-width:none;padding-bottom:20px}
+#glist::-webkit-scrollbar{display:none}
+.gm{display:flex;align-items:center;gap:14px;height:70px;padding:0 0 0 14px;margin-bottom:12px;background:#fff;border-radius:12px;box-shadow:0 1px 3px #0001;cursor:pointer}
+.gm:active{background:#f6f6f6}
+.gm .gic{position:relative;width:46px;height:46px;flex:none}
+.gm .gic img.app{width:46px;height:46px;border-radius:11px;display:block;object-fit:cover}
+.gm .gic .ph{width:46px;height:46px;border-radius:11px;background:#f5c518}
+.gm .ok{position:absolute;right:-6px;bottom:-6px;width:21px;height:21px;border-radius:50%;background:#37d6a0;border:2px solid #fff;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.gm .gt{flex:1;min-width:0}
+.gm .gn{font:500 15px Roboto,Helvetica,Arial,sans-serif;color:#222;line-height:18px;margin-bottom:4px}
+.gm .gs{font:500 12px Roboto,Helvetica,Arial,sans-serif;color:#8a8a8a;line-height:14px}
+.gm .gch{display:flex;flex:none;margin-right:27px}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="left">
+    <button id="close" aria-label="Close">×</button>
+    <div id="fly"></div>
+    <div id="logo"><div class="sc">SUPERCELL <span class="idb">ID</span></div><div>Safeguard your games, play on multiple devices and more!</div></div>
+    <div id="steps"><div class="track"><div class="dot" id="dot"></div></div>
+      <div class="lbl on" style="top:5%" data-s="0">Register</div>
+      <div class="lbl" style="top:47%" data-s="1">Verify</div>
+      <div class="lbl" style="bottom:5%" data-s="2">Done!</div></div>
+  </aside>
+  <main id="right">
+
+    <section class="view on" id="v0" style="flex-direction:column;gap:18px">
+      <div class="top">SUPER<br>CELL</div><div class="faq">FAQ</div>
+      <h1 style="font-weight:500;font-size:16px">Already registered?</h1>
+      <button class="btn" style="min-width:180px" onclick="alert('Demo: login is not implemented.')">Log in</button>
+      <div class="link" style="margin-top:34px">New to Supercell ID? <a onclick="go(1)">Register Now ›</a></div>
+    </section>
+
+    <section class="view" id="v1">
+      <div class="circle"><div class="phone"><i></i><span>ID</span></div></div>
+      <div class="col"><h1>Create New</h1><p style="font-size:13px">Make sure to use a valid email address to receive your verification code!</p>
+        <div class="row"><button class="btn w" onclick="go(0)">Cancel</button><button class="btn" onclick="go(2)">Continue</button></div></div>
+    </section>
+
+    <section class="view" id="v2">
+      <div class="circle"><svg viewBox="0 0 160 160" width="100%" height="100%"><rect x="62" y="32" width="58" height="96" rx="9" fill="#fff" stroke="#e2e2e2"/><rect x="68" y="42" width="46" height="76" rx="5" fill="#2a2a2e"/><rect x="74" y="68" width="34" height="26" rx="6" fill="#fff"/><text x="91" y="87" font-size="15" font-weight="900" text-anchor="middle" fill="#111" font-family="Roboto,Arial">ID</text><path d="M22 68h24V54l24 26-24 26V92H22z" fill="#3b82f6"/></svg></div>
+      <div class="col"><h1 id="lTitle">Log in</h1><p id="lDesc">Enter your Supercell ID email address to receive an access code.</p>
+        <input class="em" id="email" type="email" placeholder="Enter email" autocomplete="off">
+        <div class="err" id="e2"></div>
+        <div class="rem"><button type="button" id="chk" role="checkbox" aria-checked="true" aria-labelledby="lRem"><svg width="20" height="16" viewBox="0 0 20 16"><path d="M2 8.5 7.5 14 18 2.5" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span id="lRem">Remember me on this device</span><button type="button" id="infoB" aria-label="Info"><svg width="8" height="18" viewBox="0 0 8 18"><circle cx="4" cy="2.2" r="2" fill="#444"/><rect x="2" y="6" width="4" height="11" rx="1.2" fill="#444"/></svg></button><div class="tip" id="infoT" hidden></div></div>
+        <div class="row"><button class="btn w" id="lCancel" onclick="go(1)">Cancel</button><button class="btn" id="lGo" onclick="sendCode()" disabled>Log in</button></div></div>
+    </section>
+
+    <section class="view" id="v3">
+      <div class="circle"><svg width="100" height="80" viewBox="0 0 100 80"><path d="M0 40 50 5l50 35v40H0z" fill="#3b82f6"/><rect x="14" y="14" width="72" height="42" rx="3" fill="#fff"/><g fill="#333"><circle cx="34" cy="38" r="3"/><circle cx="46" cy="38" r="3"/><circle cx="58" cy="38" r="3"/></g><path d="m64 38 5 5 10-11" stroke="#2fd1a0" stroke-width="4" fill="none"/></svg></div>
+      <div class="col" style="width:min(62vw,400px)"><h1>One more step!</h1>
+        <p style="font-size:14px">A verification code has been sent to your email at <b id="mail">your email address</b>. Please enter the code to continue.</p>
+        <div class="codes" id="codes"></div><div class="err" id="e3"></div>
+        <div class="row"><button class="btn w" onclick="go(1)">Cancel</button><button class="btn" onclick="verify()">Submit</button></div></div>
+    </section>
+
+    <section class="view" id="v4">
+      <div class="circle"><div class="phone"><i></i><span>ID</span></div><div class="badge"><svg width="22" height="22" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10" stroke="#fff" stroke-width="3.5" fill="none"/></svg></div></div>
+      <div class="col"><h1>You're all set!</h1><p>Your game account is now connected to your Supercell ID. Return to Supercell ID anytime through the in-game Settings.</p>
+        <button class="btn" style="min-width:170px" onclick="showProfile()">Okay</button></div>
+    </section>
+    <div class="note">UI demo · no real login, no data transfer</div>
+  </main>
+
+  <div id="profile"><div id="stage">
+        <aside id="side">
+      <button class="round" id="bBack" style="left:16px" aria-label="Back"><span class="ico"><svg width="14" height="22" viewBox="0 0 14 22"><path d="M11 3 3 11l8 8" stroke="#777" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+      <button class="round" id="bChat" style="left:16px"><span class="ico" id="icChat"><svg width="26" height="26" viewBox="0 0 26 26"><path d="M13 2C7 2 2 6.2 2 11.5c0 2.6 1.2 4.9 3.2 6.6L4 23l5-2.4c1.2.3 2.6.5 4 .5 6 0 11-4.2 11-9.6S19 2 13 2z" fill="#777"/><g fill="#fff"><circle cx="8" cy="11.5" r="1.7"/><circle cx="13" cy="11.5" r="1.7"/><circle cx="18" cy="11.5" r="1.7"/></g></svg></span><span class="pill">4</span></button>
+      <button class="round" id="bCog" style="right:16px" aria-label="Settings"><span class="ico" id="icCog">⚙</span></button>
+      <div id="me"><span>🐔</span></div>
+      <div class="on-t" id="tOn">Online</div>
+      <div id="idrow"><span id="idlogo"><span class="idb">ID</span></span><span id="pname">Name</span></div>
+      <div id="gpill"><span class="gi" id="gico"></span><span id="gname" class="blur">Name</span></div>
+      <div class="tab on" id="tabF" style="top:252px"><span class="ic" id="icFriends"><svg width="55" height="40" viewBox="0 0 55 40"><rect x="2" y="6" width="26" height="28" rx="8" fill="#4aa0f5" transform="rotate(-8 15 20)"/><rect x="26" y="6" width="26" height="28" rx="8" fill="#f77fc0" transform="rotate(8 39 20)"/><g fill="#fff"><circle cx="10" cy="17" r="2.3"/><circle cx="20" cy="15" r="2.3"/><circle cx="34" cy="15" r="2.3"/><circle cx="44" cy="17" r="2.3"/></g></svg></span><span id="tFr">Friends</span></div>
+      <div class="tab" id="tabG" style="top:319px"><span class="ic" id="icGames"><svg width="55" height="40" viewBox="0 0 55 40"><rect x="2" y="6" width="28" height="28" rx="7" fill="#888" transform="rotate(-8 16 20)"/><rect x="25" y="6" width="28" height="28" rx="7" fill="#ccc" transform="rotate(8 39 20)"/><path d="m16 13 2.2 4.6 5 .6-3.7 3.4 1 5-4.5-2.5-4.5 2.5 1-5-3.7-3.4 5-.6z" fill="#fff"/></svg></span><span id="tGa">My Games</span></div>
+    </aside>
+    <section id="flist"></section>
+    <section id="glist"></section>
+    <section id="sett">
+      <div id="shead"><span id="tSet">Settings</span></div>
+      <div id="sbody">
+        <div class="card">
+          <div class="srow"><span class="grow" id="tOnl">Show online status</span><button class="tgl on" id="tgOn" aria-label="Show online status"></button></div>
+          <div class="srow"><span class="grow" id="tReq">Receive new friend requests</span><button class="tgl on" id="tgReq" aria-label="Receive new friend requests"></button></div>
+        </div>
+        <div class="card">
+          <div class="srow pid"><span id="sidlogo"><span class="idb">ID</span></span><div class="grow"><div class="lab" id="tPid">Player ID</div><div class="val" id="spname">Name</div></div><button class="chg" id="chgId"><span id="tChg">Change</span></button></div>
+          <div class="srow mail"><div class="grow"><span id="tLog">Logged in with</span><div id="smail">mail</div></div><button class="chg" id="chgMail"><span id="tChgM">Change email</span></button></div>
+          <div class="srow lnk" id="rSw"><span class="ico2"><span id="icSw"><span class="fb sw">ID</span></span></span><span class="grow" id="tSw">Switch account</span><span class="chev"><svg width="9" height="15" viewBox="0 0 9 15"><path d="M1.5 1.5 7.5 7.5l-6 6" stroke="#2f7be5" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+        <div class="card">
+          <div class="srow lnk" id="rLo"><span class="ico2"><span id="icLo"><span class="fb lo">ID</span></span></span><span class="grow" id="tLo">Log Out</span></div>
+        </div>
+        <div class="card">
+          <div class="srow apr"><span class="ico2"><span id="icAp"><svg width="34" height="34" viewBox="0 0 34 34"><path d="M17 3 5 8v8c0 7 5 12 12 15 7-3 12-8 12-15V8z" fill="#9a9a9a"/><path d="M17 9v8" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></span><i class="bang">!</i></span><span class="grow" id="tAp">Account Protection</span></div>
+          <div class="srow apd"><span class="grow" id="tApd">Add an extra layer of security to your Supercell ID account</span><button class="chg" id="chgAp"><span id="tAct">Activate</span></button></div>
+        </div>
+        <div class="card">
+          <div class="hdr" id="tEs">Email subscriptions</div>
+          <div class="srow"><span class="grow" id="tNews">Receive news and updates</span><button class="tgl" id="tgNews" aria-label="Receive news and updates"></button></div>
+        </div>
+        <div class="card">
+          <div class="hdr" id="tInf">Information</div>
+          <div class="srow lnk" id="rWhat"><span class="grow" id="tWhat">What is Supercell ID?</span><span class="chev"><svg width="9" height="15" viewBox="0 0 9 15"><path d="M1.5 1.5 7.5 7.5l-6 6" stroke="#2f7be5" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="srow lnk" id="rFaq"><span class="grow" id="tFaq">FAQ</span><span class="chev"><svg width="9" height="15" viewBox="0 0 9 15"><path d="M1.5 1.5 7.5 7.5l-6 6" stroke="#2f7be5" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div class="srow lnk" id="rTut"><span class="grow" id="tTut">Tutorial Video</span><span class="ext"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#2f7be5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4"/><path d="M13 3h6v6M19 3l-9 9"/></svg></span></div>
+          <div class="srow lnk" id="rTos"><span class="grow" id="tTos">Terms of Service</span><span class="ext"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#2f7be5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4"/><path d="M13 3h6v6M19 3l-9 9"/></svg></span></div>
+          <div class="srow lnk" id="rPp"><span class="grow" id="tPp">Privacy Policy</span><span class="ext"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#2f7be5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-4"/><path d="M13 3h6v6M19 3l-9 9"/></svg></span></div>
+          </div>
+        <div class="ver" id="tVer">Version 1.5.8-f</div>
+      </div>
+    </section>
+    <div id="fab"><span class="ico" id="icFab"><svg width="36" height="36" viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="9" fill="#bdbdbd"/><g fill="#fff"><circle cx="12" cy="16" r="2.6"/><circle cx="24" cy="16" r="2.6"/></g><path d="M12 24q6 4 12 0" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></span><span class="pill">99+</span></div>
+    <section id="edit">
+      <button class="round" id="eBack" style="left:16px;top:20px" aria-label="Back"><span class="ico"><svg width="14" height="22" viewBox="0 0 14 22"><path d="M11 3 3 11l8 8" stroke="#555" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+      <div id="eTitle"><span id="tEa">Edit avatar</span></div>
+      <div id="ePrev"></div>
+      <div id="eCol">
+        <div class="elab" id="tCa">Choose avatar</div>
+        <div class="erow" id="avRow"></div>
+        <div class="elab" id="tCb">Choose background</div>
+        <div class="erow" id="bgRow"></div>
+        <div class="ebtns"><button class="btn w" id="eCancel">Cancel</button><button class="btn" id="eSave">Save</button></div>
+      </div>
+    </section>
+  </div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const stepOf={1:0,2:0,3:1,4:2},tops=['5%','47%','calc(95% - 12px)'];
+function go(n){$('profile').classList.remove('on');$('edit').classList.remove('on');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  $('v'+n).classList.add('on');
+  const s=n>0;$('logo').style.display=s?'none':'flex';$('steps').style.display=s?'block':'none';
+  if(s){const i=stepOf[n];$('dot').style.top=i==2?'calc(100% - 12px)':(i==1?'46%':'0');
+    document.querySelectorAll('.lbl').forEach(l=>l.classList.toggle('on',+l.dataset.s<=i));}
+  if(n==3){document.querySelectorAll('#codes input').forEach(x=>x.value='');$('e3').textContent='';$('codes').children[0].focus()}
+  if(n==2)setTimeout(()=>$('email').focus(),50);
+  if(n==4)sfx('check');
+}
+const c=$('codes');
+for(let i=0;i<6;i++){const x=document.createElement('input');x.maxLength=1;x.inputMode='numeric';
+  x.oninput=()=>{x.value=x.value.replace(/\D/g,'');if(x.value&&c.children[i+1])c.children[i+1].focus()};
+  x.onkeydown=e=>{if(e.key=='Backspace'&&!x.value&&c.children[i-1])c.children[i-1].focus();if(e.key=='Enter')verify()};
+  x.onpaste=e=>{const t=(e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,6);if(!t)return;e.preventDefault();[...t].forEach((d,k)=>c.children[k].value=d);c.children[Math.min(t.length,5)].focus()};
+  c.appendChild(x)}
+function sendCode(){const m=$('email').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(m)){$('e2').textContent='Please enter a valid email address.';return}
+  $('e2').textContent='';$('mail').textContent=m;go(3)}
+function verify(){const v=[...c.children].map(x=>x.value).join('');
+  if(v.length<6){$('e3').textContent='Please enter all 6 digits.';return}go(4)}
+$('email').onkeydown=e=>{if(e.key=='Enter')sendCode()};
+$('close').onclick=()=>go(0);
+
+const ASSETS='assets/';
+
+const SOUND=true;let sfxHit=false;
+const SFX_FILES={cancel:'cancel_btn_01',click:'generic_button_01',newgame:'new_game_02',close:'pop_up_window_close_01',open:'pop_up_window_open_01',check:'sign_in_checkmark_sfx_01',tab:'switching_tabs_jump_02'};
+const _au={};
+Object.values(SFX_FILES).forEach(f=>{const a=new Audio(ASSETS+f+'.m4a');a.preload='auto';_au[f]=a});
+function sfx(k){sfxHit=true;if(!SOUND)return;const a=_au[SFX_FILES[k]];if(!a)return;
+  try{a.currentTime=0}catch(e){}
+  const p=a.play();if(p&&p.catch)p.catch(()=>{})}
+document.addEventListener('click',()=>{sfxHit=false},true);
+
+document.addEventListener('click',e=>{if(sfxHit)return;const t=e.target.closest('button,.tab,.link a,.fr,.gm');if(!t)return;
+  sfx(t.id==='close'||t.classList.contains('w')?'cancel':t.classList.contains('tab')?'tab':'click')});
+const MAP={v1:'register_start_illustration.png',v2:'login_email_illustration.png',v3:'register_pin_illustration.png',v4:'register_done_illustration.png'};
+for(const [id,f] of Object.entries(MAP)){
+  const img=new Image();img.alt='';img.style.width='100%';
+  img.onload=()=>{const c=document.querySelector('#'+id+' .circle');c.innerHTML='';c.style.background='none';c.appendChild(img)};
+  img.src=ASSETS+f;
+}
+const lg=new Image();lg.style.cssText='width:80%;max-width:150px';
+lg.onload=()=>{const s=document.querySelector('#logo .sc');s.replaceWith(lg)};
+lg.src=ASSETS+'supercell_id_logo_white.png';
+
+(function(){
+
+  const games=['laser','magic','scroll','soil','squad'];
+  const box=$('fly'),R=(a,b)=>a+Math.random()*(b-a);
+  let k=0;
+
+  function spawn(progress){
+    const W=box.clientWidth,H=box.clientHeight;
+    if(!W||!H)return;
+    const im=new Image();im.alt='';im.className='fi';im.draggable=false;
+    const w=Math.round(W*R(.6,.85));
+    im.style.width=w+'px';im.style.height=w+'px';
+    const x0=R(-w*.7,W*.1),y0=H+R(0,.1)*H;
+    const x1=x0+W*R(.45,.9),y1=-w-R(0,.15)*H;
+    const dur=R(18000,24000);
+    im.onerror=()=>im.remove();
+    im.src=ASSETS+'AppIcon_'+games[k++%games.length]+'.png';
+    box.appendChild(im);
+    const a=im.animate([
+      {transform:`translate3d(${x0}px,${y0}px,0)`,opacity:0},
+      {opacity:.6,offset:.15},
+      {opacity:.6,offset:.85},
+      {transform:`translate3d(${x1}px,${y1}px,0)`,opacity:0}
+    ],{duration:dur,easing:'linear',fill:'forwards'});
+    if(progress)a.currentTime=dur*progress;
+    a.onfinish=()=>im.remove();
+  }
+  spawn(.45);
+  setInterval(()=>spawn(0),10000);
+})();
+
+const IC={chat:'messages_bubble.png',cog:'settings_cogwheel.png',friends:'friend_face_icon.png',games:'tab_icon_star_disabled.png',fab:'friend_face_icon_grayscale.png',id:'id_logo_black.png',game:'AppIcon_laser.png',sw:'switch_account_icon.png',lo:'log_out_icon.png',ap:'account_protection_icon_disabled.png',ext:'ui_icon_external_link.png',star:'tab_icon_star.png',laser:'AppIcon_laser.png'};
+
+const MYGAMES=[{name:null,icon:'AppIcon_laser.png',trophies:16}];
+let curTab='f';
+
+const LANG='en';
+const T={
+  en:{on:'Online',fr:'Friends',ga:'My Games',off:'Offline',set:'Settings',onl:'Show online status',req:'Receive new friend requests',pid:'Player ID',chg:'Change',log:'Logged in with',chgm:'Change email',name:'Name',friend:'Friend ',sw:'Switch account',lo:'Log Out',ap:'Account Protection',apd:'Add an extra layer of security to your Supercell ID account',act:'Activate',es:'Email subscriptions',news:'Receive news and updates',inf:'Information',what:'What is Supercell ID?',faq:'FAQ',tut:'Tutorial Video',tos:'Terms of Service',pp:'Privacy Policy',ver:'Version 1.5.8-f',ea:'Edit avatar',ca:'Choose avatar',cb:'Choose background',cancel:'Cancel',save:'Save',tro:'Trophies',gn:'Brawl Stars'},
+  es:{on:'En línea',fr:'Amigos',ga:'Mis juegos',off:'Desconectado',set:'Ajustes',onl:'Mostrar estado en línea',req:'Recibir nuevas solicitudes de amistad',pid:'ID de jugador',chg:'Cambiar',log:'Sesión iniciada con',chgm:'Cambiar correo',name:'Nombre',friend:'Amigo ',sw:'Cambiar de cuenta',lo:'Cerrar sesión',ap:'Protección de la cuenta',apd:'Añade una capa extra de seguridad a tu Supercell ID',act:'Activar',es:'Suscripciones por correo',news:'Recibir noticias y novedades',inf:'Información',what:'¿Qué es Supercell ID?',faq:'Preguntas frecuentes',tut:'Vídeo tutorial',tos:'Términos de servicio',pp:'Política de privacidad',ver:'Versión 1.5.8-f',ea:'Editar avatar',ca:'Elige un avatar',cb:'Elige un fondo',cancel:'Cancelar',save:'Guardar',tro:'Trofeos',gn:'Brawl Stars'}
+}[LANG]||{};
+
+const LT={
+  en:{title:'Log in',desc:'Enter your Supercell ID email address to receive an access code.',ph:'Enter email',rem:'Remember me on this device',cancel:'Cancel',go:'Log in',info:'Stay logged in on this device so you do not have to sign in again.'},
+  es:{title:'Inicio de sesión',desc:'Escribe tu dirección de correo de Supercell ID para recibir un código de acceso.',ph:'Escribir correo electrónico',rem:'Recordarme en este dispositivo',cancel:'Cancelar',go:'Iniciar sesión',info:'Mantén la sesión iniciada en este dispositivo.',steps:['Inicio de sesión','Verificación','Confirmación']}
+}[LANG]||{};
+if(LT.title){
+  [['lTitle',LT.title],['lDesc',LT.desc],['lRem',LT.rem],['lCancel',LT.cancel],['lGo',LT.go],['infoT',LT.info]].forEach(([i,t])=>$(i).textContent=t);
+  $('email').placeholder=LT.ph;
+  if(LT.steps)document.querySelectorAll('.lbl').forEach((l,i)=>l.textContent=LT.steps[i]);
+}
+const chk=$('chk');chk.onclick=()=>chk.setAttribute('aria-checked',chk.getAttribute('aria-checked')!=='true');
+$('email').addEventListener('input',()=>{$('lGo').disabled=!/^\S+@\S+\.\S+$/.test($('email').value.trim());$('e2').textContent=''});
+$('infoB').onclick=e=>{e.stopPropagation();const h=$('infoT').hidden=!$('infoT').hidden;sfx(h?'close':'open')};
+document.addEventListener('click',()=>{$('infoT').hidden=true});
+const AV=(f,fb,bg)=>({f:'avatar_'+f+'.png',fb,bg});
+const FRIENDS=[AV('spike','🌵','#5fd0e8'),AV('princess','👸','#7a56c6'),AV('spike','🌵','#6fd38c'),AV('el_primo','🤼','#3f8fe0'),AV('barb','🧨','#f29a3c'),AV('spike','🌵','#c4e34e')];
+const NAMES=[1,2,3,4,5,6].map(n=>T.friend+n);
+function swap(el,file,css){const i=new Image();i.alt='';if(css)i.style.cssText=css;i.onload=()=>el.replaceChildren(i);i.src=ASSETS+file}
+function fit(){const a=$('app'),W=a.clientWidth,H=a.clientHeight,k=Math.min(H/397,W/700),st=$('stage');
+  st.style.width=W/k+'px';st.style.height=H/k+'px';st.style.transform='scale('+k+')';window.__k=k}
+addEventListener('resize',fit);
+
+const EASE='cubic-bezier(.2,.7,.2,1)',DISP={flist:'block',fab:'flex',glist:'block',sett:'block'};
+const SLIDE_OUT=380,SLIDE_IN=90,DUR_OUT=200,DUR_IN=240,DELAY_IN=60;
+let settOn=false,swapTok=0,running=[];
+const grp=t=>t==='f'?[$('flist'),$('fab')]:[$('glist')];
+const curGrp=()=>settOn?[$('sett')]:grp(curTab);
+function applyView(){
+  ['flist','fab','glist','sett'].forEach(id=>$(id).style.display='none');
+  curGrp().forEach(e=>e.style.display=DISP[e.id]);
+}
+function swapAnim(outEls,inEls,dir){
+  running.forEach(a=>a.cancel());running=[];
+  applyView();const tok=++swapTok;
+  outEls.forEach(e=>{
+    if(inEls.includes(e))return;
+    e.style.display=DISP[e.id];
+    const a=e.animate([{transform:'translateX(0)'},{transform:'translateX('+(-dir*SLIDE_OUT)+'px)'}],{duration:DUR_OUT,easing:'ease-in',fill:'forwards'});
+    running.push(a);
+    a.onfinish=()=>{if(tok===swapTok){e.style.display='none';a.cancel()}};
+  });
+  inEls.forEach(e=>{
+    running.push(e.animate([{transform:'translateX('+(dir*SLIDE_IN)+'px)',opacity:0},{transform:'none',opacity:1}],{duration:DUR_IN,delay:DELAY_IN,easing:EASE,fill:'backwards'}));
+  });
+}
+function setSettings(on,instant){
+  if(on===settOn){applyView();return}
+  const out=curGrp();settOn=on;
+  $('side').classList.toggle('set',on);
+  if(instant)applyView();else swapAnim(out,curGrp(),on?1:-1);
+}
+function applyTab(){applyView()}
+function setTab(t,instant){
+  const prev=curTab;
+  $('tabF').classList.toggle('on',t==='f');$('tabG').classList.toggle('on',t==='g');
+  const pop=!instant&&(t!==curTab||settOn);
+  friendsIcon(t==='f',pop);gamesIcon(t==='g',pop);
+  $('flist').scrollTop=0;$('glist').scrollTop=0;
+  if(instant){curTab=t;settOn=false;$('side').classList.remove('set');applyView();return}
+  if(settOn){curTab=t;setSettings(false);return}
+  if(prev===t)return;
+  const out=grp(prev);curTab=t;
+  swapAnim(out,grp(t),t==='g'?1:-1);
+}
+
+function hop(a,b){
+  const k=(r,up,tilt,sc)=>({transform:'translateY('+up+'px) rotate('+(r+tilt)+'deg) scale('+sc+')',filter:'drop-shadow(0 3px 0 rgba(0,0,0,.14))'});
+  const fr=(r,d)=>[
+    {transform:'translateY(0) rotate('+r+'deg) scale(1)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))',offset:0},
+    Object.assign(k(r,-5*d,-9*d,1.08),{offset:.3}),
+    Object.assign(k(r,-2*d,-3*d,1.04),{offset:.55}),
+    Object.assign(k(r,1*d,2*d,1),{offset:.8}),
+    {transform:'translateY(0) rotate('+r+'deg) scale(1)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))',offset:1}];
+  const o={duration:290,easing:'ease-out'};
+  a.animate(fr(-8,1),o);
+  b.animate(fr(8,-1.3),Object.assign({delay:70,fill:'backwards'},o));
+}
+
+function pairIcon(el,fl,fr,pop){
+  const w=document.createElement('span');
+  w.style.cssText='position:relative;display:block;width:55px;height:44px';
+  const mk=(f,css)=>{const i=new Image();i.alt='';i.style.cssText='position:absolute;display:block;height:auto;max-width:none;max-height:none;'+css;i.src=ASSETS+f;return i};
+  const a=mk(fl,'left:0;top:7px;width:31px;transform:rotate(-8deg)');
+  const b=mk(fr,'left:25px;top:8px;width:29px;transform:rotate(8deg)');
+  let n=0;const done=()=>{if(++n===2){el.replaceChildren(w);if(pop)hop(a,b)}};
+  a.onload=b.onload=done;w.append(b,a);
+}
+function friendsIcon(on,pop){
+  pairIcon($('icFriends'),on?'tab_icon_face_blue.png':'tab_icon_face_disabled.png',on?'tab_icon_face_red.png':'tab_icon_face_disabled.png',on&&pop);
+}
+function gamesIcon(on,pop){
+  pairIcon($('icGames'),on?'tab_icon_star.png':'tab_icon_star_disabled.png',on?'tab_icon_sword.png':'tab_icon_sword_disabled.png',on&&pop);
+}
+function buildGames(){
+  const g=$('glist');g.innerHTML='';
+  MYGAMES.forEach(m=>{const r=document.createElement('div');r.className='gm';
+    r.innerHTML='<div class="gic"><div class="ph"></div><span class="ok"><svg width="11" height="9" viewBox="0 0 11 9"><path d="M1.2 4.6 4 7.3 9.8 1.4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><div class="gt"><div class="gn"></div><div class="gs"></div></div><span class="gch"><svg width="9" height="15" viewBox="0 0 9 15"><path d="M1.5 1.5 7.5 7.5l-6 6" stroke="#2f7be5" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+    r.querySelector('.gn').textContent=m.name||T.gn||'Brawl Stars';
+    r.querySelector('.gs').textContent=(T.tro||'Trophies')+': '+m.trophies;
+    const im=new Image();im.alt='';im.className='app';im.onload=()=>r.querySelector('.ph').replaceWith(im);im.src=ASSETS+m.icon;
+    g.appendChild(r)});
+}
+function bindToggle(id){const b=$(id);b.onclick=()=>{b.classList.toggle('on');b.setAttribute('aria-pressed',b.classList.contains('on'))}}
+function showProfile(){
+  sfx('newgame');
+  const mail=$('email').value.trim(),name=(mail.split('@')[0]||'Player');
+  [['tOn',T.on],['tFr',T.fr],['tGa',T.ga],['tSet',T.set],['tOnl',T.onl],['tReq',T.req],['tPid',T.pid],['tChg',T.chg],['tLog',T.log],['tChgM',T.chgm],['tSw',T.sw],['tLo',T.lo],['tAp',T.ap],['tApd',T.apd],['tAct',T.act],['tEs',T.es],['tNews',T.news],['tInf',T.inf],['tWhat',T.what],['tFaq',T.faq],['tTut',T.tut],['tTos',T.tos],['tPp',T.pp],['tVer',T.ver],['tEa',T.ea],['tCa',T.ca],['tCb',T.cb],['eCancel',T.cancel],['eSave',T.save]].forEach(([i,t])=>$(i).textContent=t);
+  $('pname').textContent=name;$('gname').textContent=name;$('spname').textContent=name;$('smail').textContent=mail||'-';
+  setSettings(false,true);
+  const l=$('flist');l.innerHTML='';
+  FRIENDS.forEach((a,k)=>{const r=document.createElement('div');r.className='fr';
+    r.innerHTML='<div class="fav" style="background:'+a.bg+'">'+a.fb+'</div><div><div class="n">'+NAMES[k]+'</div><div class="s">'+T.off+'</div></div><span class="ch"><svg width="9" height="15" viewBox="0 0 9 15"><path d="M1.5 1.5 7.5 7.5l-6 6" stroke="#2f7be5" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+    swap(r.firstChild,a.f);l.appendChild(r)});
+  renderAv($('me'),myAv,myBg);$('sbody').scrollTop=0;
+  swap($('icSw'),IC.sw,'width:36px');swap($('icLo'),IC.lo,'width:36px');swap($('icAp'),IC.ap,'width:34px');
+  document.querySelectorAll('.ext').forEach(e=>swap(e,IC.ext,'width:22px'));
+  swap($('icChat'),IC.chat,'width:26px');swap($('icCog'),IC.cog,'width:26px');
+  swap($('icFab'),IC.fab);swap($('idlogo'),IC.id);
+  swap($('sidlogo'),IC.id);swap($('gico'),IC.game);
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  buildGames();setTab('f',true);
+  $('profile').classList.add('on');fit();
+}
+$('bCog').onclick=()=>{sfx('open');setSettings(true)};
+$('bBack').onclick=()=>{sfx('close');setSettings(false)};
+$('tabF').onclick=()=>setTab('f');$('tabG').onclick=()=>setTab('g');
+bindToggle('tgOn');bindToggle('tgReq');
+$('chgId').onclick=()=>alert('Demo: not implemented.');
+$('chgMail').onclick=()=>alert('Demo: not implemented.');
+
+bindToggle('tgNews');
+const demo=()=>alert('Demo: not implemented.');
+['rSw','chgAp','rWhat','rFaq','rTut','rTos','rPp'].forEach(i=>$(i).onclick=demo);
+$('rLo').onclick=()=>{sfx('close');go(0)};
+
+const AVL=['archer','barb','bazooka','chicken','heavy','el_primo','hog_rider','king','mortis','pig','ram_rider','dr_t','spike','princess','moco_ellie','moco_jax','moco_luna','moco_manny','moco_sniffer_dog','moco_support_cat'];
+const AVE={archer:'🏹',barb:'🧔',bazooka:'💥',chicken:'🐔',heavy:'😎',el_primo:'🤼',hog_rider:'🐗',king:'👑',mortis:'🦇',pig:'🐷',ram_rider:'🐏',dr_t:'🧑‍🔬',spike:'🌵',princess:'👸',moco_ellie:'👩',moco_jax:'🧑',moco_luna:'👧',moco_manny:'👦',moco_sniffer_dog:'🐶',moco_support_cat:'🐱'};
+const BGS=['#e6e6e6','linear-gradient(160deg,#35a8ff,#1a5fd0)','linear-gradient(160deg,#b27be8,#4a2aa8)','linear-gradient(160deg,#3be0b0,#10a878)','linear-gradient(160deg,#ffbf3a,#ff6a1a)','linear-gradient(160deg,#fff793,#ffe04a)','linear-gradient(160deg,#ffa3a3,#ee5a6a)','linear-gradient(160deg,#aeeeff,#4ac6f0)'];
+let myAv='princess',myBg=0,tAv=myAv,tBg=myBg;
+function renderAv(el,av,bg){el.style.background=BGS[bg];el.textContent=AVE[av]||'';swap(el,'avatar_'+av+'.png')}
+function buildEdit(){
+  const ar=$('avRow'),br=$('bgRow');ar.innerHTML='';br.innerHTML='';
+  AVL.forEach(a=>{const b=document.createElement('button');b.className='av'+(a===tAv?' sel':'');b.setAttribute('aria-label',a);
+    renderAv(b,a,0);b.onclick=()=>{tAv=a;[...ar.children].forEach(x=>x.classList.toggle('sel',x===b));renderAv($('ePrev'),tAv,tBg)};ar.appendChild(b)});
+  BGS.forEach((g,i)=>{const b=document.createElement('button');b.style.background=g;b.className=i===tBg?'sel':'';b.setAttribute('aria-label','background '+(i+1));
+    b.onclick=()=>{tBg=i;[...br.children].forEach(x=>x.classList.toggle('sel',x===b));renderAv($('ePrev'),tAv,tBg)};br.appendChild(b)});
+  renderAv($('ePrev'),tAv,tBg);ar.scrollLeft=0;br.scrollLeft=0;
+}
+let editAnim=null;
+function openEdit(){tAv=myAv;tBg=myBg;buildEdit();sfx('open');
+  if(editAnim)editAnim.cancel();const e=$('edit');e.classList.add('on');
+  editAnim=e.animate([{transform:'translateX(100%)',opacity:.3},{transform:'none',opacity:1}],{duration:230,easing:EASE})}
+function hideEdit(){const e=$('edit');if(editAnim)editAnim.cancel();
+  const a=editAnim=e.animate([{transform:'none',opacity:1},{transform:'translateX(100%)',opacity:.3}],{duration:250,easing:'ease-in',fill:'forwards'});
+  e.style.pointerEvents='none';
+  a.onfinish=()=>{e.classList.remove('on');e.style.pointerEvents='';a.cancel();if(editAnim===a)editAnim=null}}
+function closeEdit(){sfx('close');hideEdit()}
+
+['avRow','bgRow'].forEach(id=>{const r=$(id);
+  r.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){r.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
+  let down=false,sx=0,sl=0,moved=false;
+  r.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')return;down=true;moved=false;sx=e.clientX;sl=r.scrollLeft});
+  addEventListener('pointermove',e=>{if(!down)return;const d=e.clientX-sx;if(Math.abs(d)>4)moved=true;if(moved)r.scrollLeft=sl-d/(window.__k||1)});
+  addEventListener('pointerup',()=>{down=false});
+  r.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+});
+$('me').onclick=openEdit;
+$('eBack').onclick=closeEdit;$('eCancel').onclick=closeEdit;
+$('eSave').onclick=()=>{myAv=tAv;myBg=tBg;renderAv($('me'),myAv,myBg);sfx('check');hideEdit()};
+</script>
+</body>
+</html>
